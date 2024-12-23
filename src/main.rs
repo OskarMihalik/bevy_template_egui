@@ -6,6 +6,7 @@ use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use bevy::winit::WinitWindows;
 use bevy::DefaultPlugins;
+use bevy_egui::{egui, EguiContexts, EguiPlugin};
 use std::io::Cursor;
 use winit::window::Icon;
 
@@ -32,6 +33,10 @@ fn main() {
                 }),
         )
         .add_systems(Startup, set_window_icon)
+        .add_plugins(EguiPlugin)
+        // // Systems that create Egui widgets should be run during the `CoreSet::Update` set,
+        // // or after the `EguiSet::BeginPass` system (which belongs to the `CoreSet::PreUpdate` set).
+        .add_systems(Update, ui_example_system)
         .run();
 }
 
@@ -54,4 +59,30 @@ fn set_window_icon(
         let icon = Icon::from_rgba(rgba, width, height).unwrap();
         primary.set_window_icon(Some(icon));
     };
+}
+
+fn ui_example_system(mut is_last_selected: Local<bool>, mut contexts: EguiContexts) {
+    let ctx = contexts.ctx_mut();
+
+    egui::SidePanel::left("left_panel")
+        .resizable(true)
+        .show(ctx, |ui| {
+            ui.label("Left resizeable panel");
+            if ui
+                .add(egui::widgets::Button::new("A button").selected(!*is_last_selected))
+                .clicked()
+            {
+                *is_last_selected = false;
+            }
+            if ui
+                .add(egui::widgets::Button::new("Another button").selected(*is_last_selected))
+                .clicked()
+            {
+                *is_last_selected = true;
+            }
+            ui.allocate_rect(ui.available_rect_before_wrap(), egui::Sense::hover());
+        })
+        .response
+        .rect
+        .width();
 }
