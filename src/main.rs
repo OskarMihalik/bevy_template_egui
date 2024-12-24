@@ -3,12 +3,8 @@
 
 use bevy::asset::AssetMetaCheck;
 use bevy::prelude::*;
-use bevy::window::PrimaryWindow;
-use bevy::winit::WinitWindows;
 use bevy::DefaultPlugins;
 use bevy_egui::{egui, EguiContexts, EguiPlugin};
-use std::io::Cursor;
-use winit::window::Icon;
 
 fn main() {
     App::new()
@@ -32,7 +28,6 @@ fn main() {
                     ..default()
                 }),
         )
-        .add_systems(Startup, set_window_icon)
         .add_plugins(EguiPlugin)
         // // Systems that create Egui widgets should be run during the `CoreSet::Update` set,
         // // or after the `EguiSet::BeginPass` system (which belongs to the `CoreSet::PreUpdate` set).
@@ -41,25 +36,6 @@ fn main() {
 }
 
 // Sets the icon on windows and X11
-fn set_window_icon(
-    windows: NonSend<WinitWindows>,
-    primary_window: Query<Entity, With<PrimaryWindow>>,
-) {
-    let primary_entity = primary_window.single();
-    let Some(primary) = windows.get_window(primary_entity) else {
-        return;
-    };
-    let icon_buf = Cursor::new(include_bytes!(
-        "../build/macos/AppIcon.iconset/icon_256x256.png"
-    ));
-    if let Ok(image) = image::load(icon_buf, image::ImageFormat::Png) {
-        let image = image.into_rgba8();
-        let (width, height) = image.dimensions();
-        let rgba = image.into_raw();
-        let icon = Icon::from_rgba(rgba, width, height).unwrap();
-        primary.set_window_icon(Some(icon));
-    };
-}
 
 fn ui_example_system(mut is_last_selected: Local<bool>, mut contexts: EguiContexts) {
     let ctx = contexts.ctx_mut();
